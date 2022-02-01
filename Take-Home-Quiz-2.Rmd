@@ -1,0 +1,64 @@
+---
+title: "Quiz 2 Take Home"
+output: html_document
+author: "Maddox Ormiston"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own, and I have followed all rules for collaboration.” -Maddox Ormiston
+
+The variables in the data set are:
+
+* `adm_id`, a unique ID assigned to each student,
+* `sex`, the sex of the student,
+* `major1`, `major2`, `major3`, `minor1`, `minor2`, `minor3`, the majors and minors of the student.
+
+```{r}
+library(tidyverse)
+library(readxl)
+df <- read_excel("slu_graduates_17_21.xlsx")
+
+## fixes error in the data
+df <- df %>% mutate(across(everything(),
+                           .fns = ~replace(., . ==  "STATS" , "STAT")))
+```
+
+## Question 1
+
+Creating a bar plot:
+
+```{r}
+df_bar <- df %>% filter(major1 == "STAT" | major2 == "STAT" | major3 == "STAT") %>% 
+  pivot_longer(cols = c(3:5), names_to = "type", values_to = "discipline") %>%
+  filter(!is.na(discipline)) %>% 
+  filter(discipline != "STAT") %>% 
+  group_by(discipline) %>% 
+  summarise(nstudents = n()) %>% 
+  mutate(major = fct_reorder(discipline, nstudents))
+
+ggplot(data = df_bar, aes(x = nstudents, y = major)) + 
+  geom_bar(stat = "identity")
+```
+
+## Question 2
+
+```{r}
+df_lolli <- df %>% pivot_longer(cols = c(3:5), names_to = "type", values_to = "discipline") %>%
+  filter(!is.na(discipline)) %>% 
+  group_by(sex, discipline) %>% 
+  summarise(nstudents = n()) %>% 
+  pivot_wider(names_from = sex, values_from = nstudents) %>% 
+  mutate(totalstudents = M+F) %>% 
+  filter(totalstudents >=50) %>% 
+  mutate(prop_female = F/totalstudents)
+
+df_lolli <- df_lolli %>% mutate(discipline_ordered = fct_reorder(.f = discipline, .x = prop_female))
+
+ggplot(data = df_lolli, aes(x = prop_female, y = discipline_ordered)) + 
+  geom_point() + 
+  geom_segment(aes(x = 0, xend = prop_female, y = discipline_ordered, yend = discipline_ordered))
+```
+
