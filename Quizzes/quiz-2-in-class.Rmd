@@ -1,7 +1,10 @@
 ---
 title: "Quiz 2 In Class"
-output: html_document
 author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
 ---
 
 ```{r setup, include=FALSE}
@@ -18,4 +21,50 @@ df <- read_excel(here("data/slu_graduates_17_21.xlsx"))
 ## fixes error in the data
 df <- df %>% mutate(across(everything(),
                            .fns = ~replace(., . ==  "STATS" , "STAT")))
+
+df_long <- df %>% pivot_longer(3:8, names_to = "type", values_to = "discipline")
+
+df_major <- df_long %>% 
+  filter(type == "major1" | type == "major2" | type == "major3")
 ```
+
+## Question 1
+
+```{r}
+df_lolli <- df_major %>% filter(!is.na(discipline)) %>% 
+  group_by(discipline) %>% 
+  summarise(nstudents = n()) %>% 
+  mutate(discipline = fct_reorder(.f = discipline, .x = nstudents)) %>% 
+  arrange(desc(nstudents)) %>% 
+  slice(1:10)
+
+ggplot(data = df_lolli, aes(x = nstudents, y = discipline)) + 
+  geom_point(colour = "orange", size = 4) + 
+  geom_segment(aes(x = 0, xend = nstudents, y = discipline, yend = discipline), colour = "grey")
+```
+
+## Question 2
+
+```{r}
+df_bar <- df %>% filter(major1 == "STAT" | major2 == "STAT" | major3 == "STAT") %>% 
+  pivot_longer(c(6:8), names_to = "type", values_to = "discipline") %>% 
+  filter(!is.na(discipline)) %>% 
+  group_by(discipline) %>% 
+  summarise(nstudents = n()) %>% 
+  mutate(discipline = fct_reorder(discipline, nstudents))
+
+ggplot(data = df_bar, aes(x = nstudents, y = discipline, fill = discipline)) + 
+  geom_bar(stat = "identity") + 
+  scale_fill_viridis_d()
+```
+
+## Extra Credit
+
+```{r}
+df_major %>% filter(!is.na(discipline))
+## 3689 majors total
+## 2729 students total
+3689/2729
+```
+
+Average number of majors for SLU students over the past 5 years: 1.352
