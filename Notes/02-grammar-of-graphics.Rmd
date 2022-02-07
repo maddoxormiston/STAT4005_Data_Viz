@@ -1,0 +1,175 @@
+---
+title: 'Section 2: Grammar of Graphics'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(palmerpenguins)
+library(tidyverse)
+penguins
+
+## single quantitative frequency plot
+ggplot(data = penguins, aes(x = bill_length_mm)) +
+  geom_freqpoly()
+## single categorical barplot
+ggplot(data = penguins, aes(x = species)) +
+  geom_bar()
+## two quant scatterplot
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth()
+## two cat heatmap
+ggplot(data = penguins, aes(x = species, y = island)) +
+  geom_bin_2d()
+ggplot(data = penguins, aes(x = bill_length_mm)) +
+  geom_histogram(colour = "black", fill = "white") +
+  facet_wrap(~ species, ncol = 1)
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ species)
+```
+```{r}
+ggplot(data = penguins, aes(x = species)) +
+  geom_bar(stat = "count") ## don't need stat = "count" because it's the default.
+
+penguins_count <- penguins %>% group_by(species) %>% 
+  summarise(ncount = n())
+
+## graphs bar plot when variable has count
+ggplot(data = penguins_count, aes(x = species, y = ncount)) +
+  geom_bar(stat = "identity")
+
+ggplot(data = penguins, aes(x = species, fill = sex)) +
+  geom_bar(position = "stack") + ## don't need "stacked" because it's default
+  scale_fill_viridis_d()
+
+penguins_nona <- penguins %>% filter(!is.na(sex))
+
+## side-by-side bar plot
+ggplot(data = penguins_nona, aes(x = species, fill = sex)) +
+  geom_bar(position = "dodge") + ## don't need "stacked" because it's default
+  scale_fill_viridis_d()
+ggplot(data = penguins, aes(x = species)) +
+  geom_bar() +
+  coord_polar()
+ggplot(data = penguins, aes(x = species)) + 
+  geom_bar() +
+  coord_flip()
+```
+
+Exercise: Make a plot of the penguins data that explicitly specifies all 7 parameters in the grammar of graphics, even if you just explicitly specify the default for some of the parameters.
+
+```{r}
+ggplot(data = penguins, (aes(x = island, fill = sex))) + 
+  geom_bar(stat = "count", position = "dodge") + facet_wrap(~ species) + coord_flip()
+```
+
+```{r}
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm,
+                            colour = species)) +
+  geom_point() +
+  geom_smooth()
+```
+
+```{r}
+library(tidyverse)
+category <- rep(c("Group 1", "Group 2", "Group 3", "Group 4", "Group 5"), 7)
+time <- rep(c(2000, 2001, 2002, 2003, 2004, 2005, 2006), each = 5) 
+response <- rpois(length(category), 30)
+df <- tibble(category, time, response)
+ggplot(data = df, aes(x = time, y = response)) +
+  geom_col(aes(fill = category)) +
+  labs(y = "count") +
+  scale_fill_viridis_d()
+
+## position changed
+ggplot(data = df, aes(x = time, y = response)) +
+  geom_col(aes(fill = category), position = "dodge") +
+  labs(y = "count") +
+  scale_fill_viridis_d()
+
+## faceted bar plot
+ggplot(data = df, aes(x = time, y = response)) +
+  geom_col(aes(fill = category)) +
+  labs(y = "count") +
+  scale_fill_viridis_d() + 
+  facet_wrap(~ category)
+
+## line plot
+ggplot(data = df, aes(x = time, y = response, colour = category)) + 
+  geom_line() +
+  scale_colour_viridis_d()
+```
+
+## Exercise 1.
+In the above plots, we skipped the final “two variable” combination: one quantitative variable and one categorical variable. Create either a side-by-side boxplot or side-by-side violin plot of a quantitative and a categorical variable in the penguins data set.
+
+```{r}
+ggplot(data = penguins, aes(x = sex, y = body_mass_g)) + geom_boxplot()
+```
+
+## Exercise 2.
+Modify the frequency plot made with geom_freqpoly() to use colour in two different ways:
+
+change the colour of the line to any colour that R knows. A list of some colours can be found at this link.
+
+add a colour asethetic to make three different frequency lines, one for each species of penguin.
+
+Hint: recall that only aesthetic mappings (variables) go inside aes(). Of (a) or (b), which one is an aesthetic mapping?
+
+```{r}
+ggplot(data = penguins, aes(x = bill_length_mm)) +
+  geom_freqpoly(colour = "blue")
+
+ggplot(data = penguins, aes(x = bill_length_mm, colour = species)) +
+  geom_freqpoly()
+```
+
+## Exercise 3.
+Thus far, we have only plotted one or two variables at a time. Recall that one way to construct a plot of three different variables is to use colour. Modify the scatterplot so that the points are coloured by species.
+
+```{r}
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm, colour = species)) +
+  geom_point() +
+  geom_smooth()
+```
+
+## Exercise 4.
+Recall that aes() aesthetics specified within the ggplot() function directly are called global aesthetics because every other GEOM will use them (unless specifically overridden) while aes() specified within a particular GEOM are called local aesthetics because only that particular GEOM will use them.
+
+Modify the scatterplot and smoother so that
+
+the points are coloured by species, but there is only one smoother instead of three.
+
+there are three different coloured smoothers (one for each species) but the points are all the same colour.
+
+```{r}
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(aes(colour = species)) +
+  geom_smooth()
+
+library(plotly)
+
+g <- ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm, label = island)) +
+  geom_point() +
+  geom_smooth(aes(colour = species))
+
+g
+
+ggplotly(g, tooltip = "label")
+```
+
+## Section 2.3
+
+```{r}
+ggplot(data = penguins, aes(x = bill_length_mm, y = bill_depth_mm,
+                            colour = species)) +
+  geom_point() +
+  geom_smooth() + 
+  theme(plot.background = element_rect(fill = "yellow"), axis.ticks.length = unit(1.1, "cm"), legend.key = element_rect(fill = "darkorange3", colour = "blue"), legend.text = element_text(size = 8, colour = "red"), axis.title.y = element_text(size = rel(1.5), angle = 45), legend.position = c(0,0), legend.direction = "horizontal", aspect.ratio = 5)
+```
