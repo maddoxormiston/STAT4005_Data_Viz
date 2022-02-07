@@ -1,0 +1,42 @@
+---
+title: "Section 8 Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 8.1.2
+
+### Exercise 1
+
+The "Stand your Ground" graphic is unethical because of the way it incorrectly portrays the y-axis. Any graph should have the point of origin be the lowest number, whether it is the value of something or a date. Knowing the context of this situation and the political/social unrest I can only imagine followed the news of Trayvon Martin's death, this graph must have had a large impact on the way people viewed the law.
+
+### Exercise 2
+
+Protect the privacy and security of individuals represented in our data: If we were analyzing data to find if there was an association between parents' income and GPA at SLU, it would be necessary for us to not disclose the student's name with either variable to ensure their privacy.
+
+Use data to improve life for our users, customers, organizations, and communities: If we were investigating the relationship between living proximity to a nuclear power plant and increased cancer rates in populations, the results of our study would be crucial in informing potential residents of a town to think about their house location, and could even help change federal policy for new nuclear power plants.
+
+### Exercise 3a and 3b
+
+[Here](https://www.ft.com/content/d71729a3-72e8-490c-bd7e-757027f9b226) is an example of a graph that shows the Covid vaccine has worked, and [here](https://theconversation.com/vaccine-trial-misconduct-allegation-could-it-damage-trust-in-science-171164) is an example of a graph that shows it hasn't worked, with cases rising with vaccination rate.
+
+## Section 8.2
+
+### Exercise 1
+
+The second example more humanely shows the victims of lynching as their names, dates, and accusations are included, rather than just being a number as in the first example.
+
+### Exercise 2
+
+One idea would be to create a bar plot for each state with each county on the x-axis, and the number of lynchings on the y-axis. Each bar would be divided into the number of lynchings and each section within the bar would contain the information that appears in the second example.
+
+### Exercise 3
+
+Firstly, the experiment helped people realize that any human-made algorithm would undoubtedly have human biases. Secondly, without visualization ethics, a graphic could easily misconstrue the intended message and reveal human biases by accident. Lastly, the elements a project/graphic has can either further these prejudices, or challenge the typical narrative when used properly.
+
+### Exercise 4
+
+The first aspect that conveys emotion is the color. Each line, or life, is shown in color until they are killed, and the years they lost are shown in grey. Additionally, having an individual line for each victim, instead of using rates, shows just how many people were killed by gun violence in 2018. Lastly, the portrayal of lost years instead of just lives lost conveys the feeling of loss even more through the thought of what could have been.
