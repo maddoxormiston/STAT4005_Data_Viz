@@ -1,0 +1,28 @@
+---
+title: "Quiz 3 Take Home"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own, and I have followed all rules for collaboration.” -Maddox Ormiston
+
+## Question 1
+
+While I agree there was no malicious intent behind excluding some data points, the scope of what was at stake when creating this graphic and presenting it is large enough that I believe the visualization is unethical. Principle 7 tells us to recognize and mitigate our own bias, and while it might be normal for engineers to exclude cases where there is no damage, this data tells a different story when the points are included. Principle 9 reminds us to consider the impact of our work on individuals and society, and the impacts of this work were very severe. On a general note, I don't think there was a clear reason for excluding the points, and there definitely was no good reason stated.
+
+## Question 2
+
+An example of an unethical graph can be found [here](https://www.statisticshowto.com/probability-and-statistics/descriptive-statistics/misleading-graphs/) after scrolling to the first USA Today graph. While the number of people on welfare has risen and is in fact over 100 million, it only rose by about 10 million over the course of this graph's timeline. The graph is unethical because of its misrepresentation of the rise of people on welfare by manipulationg the y-axis's starting point.
+
+## Question 3
+
+* commit: a commit takes a snapshot of your work at a certain time and keeps track of the changes since the last commit
+* push: a push allows for this commit to be updated in your GitHub repository so you can see the latest version of the file you are working on
+* pull: a pull allows you to work on any file in your GitHub account, then pull them to your local repository (RStudio)
