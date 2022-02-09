@@ -1,0 +1,30 @@
+---
+title: "Quiz 3 In Class"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own. I have not communicated with or worked with anyone else on this quiz.” -Maddox Ormiston
+
+## Question 1
+
+Because the README file has not been pulled from GitHub, Git will not allow you to push any files before doing so. To successfully push the .Rmd file, you must first pull the README file to your local repository.
+
+## Question 2
+
+One advantage is collaboration: we can share our sites with others so they are able to see our work, instead of emailing .Rmd files back and forth. A second advantage is having the most recent version of what we are working on: if something gets messed up, we are able to go back to the original version and fix what went wrong.
+
+## Question 3
+
+I think one of the hardest to execute is 6: Be open to changing our methods and conclusions in response to new knowledge. Over the summer I used baseball players' data to determine their fantasy baseball rankings, using dozens of variables to predict ranking. The more data I collected and analyzed, the more I began to learn that there were only one or two variables that were statistically significant. It was difficult to abandon all the work I had done with different statistical modeling using all the variables I had found, but in the end I made an adequate model only using a few.
+
+## Question 4
+
+The authors of "Data Feminism" give the example of how to portray deaths due to gun violence. They describe an animated visualization that focuses on each individual victim and the years they lost due to gun violence, rather than simply recounting the number of lives lost, giving this visual much more emotion than those that had already come out about gun violence. However, one could argue that data visuals should be devoid of emotion. This could be because an analyst or data visualizer's job is merely to present an appealing version of the data they've been given to work with. They are not the expert on the matter, and therefore do not need to add emotion to a visual that should be objective.
