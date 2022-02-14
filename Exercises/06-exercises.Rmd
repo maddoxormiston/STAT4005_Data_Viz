@@ -1,0 +1,73 @@
+---
+title: "Section 6 Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 6.6
+
+```{r}
+library(tidyverse)
+hpi_df <- read_csv("data/hpi-tidy.csv")
+```
+
+### Exercise 1
+
+```{r}
+world_df <- ggplot2::map_data("world")
+world_full <- left_join(world_df, hpi_df, by = c("region" = "Country"))
+
+ggplot(data = world_full, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(colour = "black", aes(fill = HappyPlanetIndex)) + 
+  coord_map(projection = "mercator") +
+  theme_void() +
+  scale_fill_viridis_b()
+```
+
+### Exercise 2
+
+```{r}
+world_df <- world_df %>% mutate(region = if_else(region == "USA", "United States of America", region))
+world_full <- left_join(world_df, hpi_df, by = c("region" = "Country"))
+
+ggplot(data = world_full, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(colour = "black", aes(fill = HappyPlanetIndex)) + 
+  coord_map(projection = "mercator") +
+  theme_void() +
+  scale_fill_viridis_b()
+```
+
+### Exercise 3
+
+```{r}
+ggplot(data = world_full, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(colour = "black", aes(fill = HappyPlanetIndex)) + 
+  coord_map(projection = "mercator", xlim=c(-180,180)) +
+  theme_void() +
+  scale_fill_viridis_b()
+```
+
+### Exercise 4
+
+The blog post explains that the Mercator projection distorts sizes of countries further from the equator. An example is Greenland: while its true size could fit into Africa 14 times, this projection makes it look the size of, if not larger than Africa.
+
+### Exercise 5
+
+```{r}
+ggplot(data = world_full, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(colour = "black", aes(fill = HappyPlanetIndex)) + 
+  coord_map(projection = "globular", xlim=c(-180,180)) +
+  theme_void() +
+  scale_fill_viridis_b()
+
+ggplot(data = world_full, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(colour = "black", aes(fill = HappyPlanetIndex)) + 
+  coord_map(projection = "gilbert", xlim=c(-180,180)) +
+  theme_void() +
+  scale_fill_viridis_b()
+```
+
+Globular seems to keep Greenland the correct size, while gilbert makes the map round but Greenland stays much larger than it should be.
