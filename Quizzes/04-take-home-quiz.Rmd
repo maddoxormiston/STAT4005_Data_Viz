@@ -1,0 +1,36 @@
+---
+title: "Quiz 4 Take Home"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own, and I have followed all rules for collaboration.” -Maddox Ormiston
+
+```{r}
+library(maps)
+library(leaflet)
+library(readr)
+library(tidyverse)
+
+capital_df <- us.cities %>% filter(capital == 2)
+```
+
+```{r}
+content <- capital_df %>%
+  mutate(popup = paste0(capital_df$name, ", Population = ", capital_df$pop))
+
+leaflet(capital_df) %>% 
+  addTiles() %>% 
+  addProviderTiles(providers$Wikimedia) %>% 
+  addMarkers(lng = capital_df$long, lat = capital_df$lat,
+             clusterOptions = markerClusterOptions(), 
+             popup = content$popup)
+```
+
