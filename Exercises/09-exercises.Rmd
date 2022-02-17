@@ -1,0 +1,22 @@
+---
+title: "Section 9 Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 9: What is Shiny?
+
+### Exercise 1
+
+The user is allowed to change n, the intercept, slope, and standard deviation of residuals.
+
+### Exercise 2
+
+The outputs on the first tab are a graph and table, and the second tab has three graphs and one table.
+
+### Exercise 3
+
+I chose the nutrition calculator. The user is able to add an ingredient using a drop-down list, choose a measure unit depending on the ingredient, the quantity, and number of servings contained. The output is two tables and three bar graphs: one table of the ingredients added, one of the nutrition facts, one graph each of macronutrients, minerals, and vitamins v their % daily value. I found it interesting how much nutrients the fruits I chose have!
