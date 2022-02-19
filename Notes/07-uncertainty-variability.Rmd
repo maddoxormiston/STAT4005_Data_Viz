@@ -1,0 +1,189 @@
+---
+title: 'Section 7: Uncertainty and Variability'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 7.1: Are Bar Plots Bad?
+
+```{r}
+library(tidyverse)
+pokemon_df <- read_csv("data/pokemon_full.csv")
+pokemon_height <- pokemon_df %>% 
+  filter(Type %in% c("Bug", "Electric", "Fighting", "Flying",
+                     "Grass", "Steel")) %>%
+  group_by(Type) %>%
+  summarise(avg_height = mean(height)) %>%
+  mutate(Type = fct_reorder(Type, avg_height))
+ggplot(data = pokemon_height, aes(x = Type, y = avg_height)) +
+  geom_col() +
+  coord_flip()
+```
+
+### Exercise 1
+
+We can't see any variability/distribution or sample size for each type.
+
+### Exercise 2
+
+```{r}
+pokemon_small <- pokemon_df %>% 
+  filter(Type %in% c("Bug", "Electric", "Fighting", "Flying", "Grass", "Steel")) %>% 
+  mutate(Type = fct_reorder(Type, height))
+
+ggplot(data = pokemon_height, aes(x = avg_height, y = Type)) + 
+  geom_point(shape = 8) + 
+  geom_point(data = pokemon_small, aes(x = height, colour = Type), alpha = 0.4)
+
+## we see that the means don't look to be very different, there are justa few outliers in some types
+```
+
+### Exercise 3
+
+Bar graphs might be useful for the media as their viewers may not have much statistical knowledge. Sometimes you do not have all the data - only summary stats. If all groups have similar variability.
+
+```{r}
+## install.packages("openintro")
+library(openintro)
+data(mlb_players_18)
+mlb_sum <- mlb_players_18 %>% group_by(position) %>%
+  summarise(med_hr = median(HR)) %>%
+  mutate(position = fct_reorder(position, med_hr))
+ggplot(data = mlb_sum, aes(x = position, y = med_hr)) +
+  geom_col() +
+  coord_flip()
+```
+
+### Exercise 4
+
+```{r}
+mlb_players_18 <- mlb_players_18 %>% 
+  mutate(position = fct_reorder(position, HR, .fun = median))
+
+ggplot(data = mlb_players_18, aes(x = position, y = HR)) + 
+  geom_boxplot() + 
+  coord_flip()
+```
+
+### Exercise 5
+
+```{r}
+library(plotly)
+
+mlb_box <- mlb_players_18 %>% 
+  group_by(position) %>% 
+  mutate(sample_size = n()) %>% 
+  ungroup()
+
+g <- ggplot(data = mlb_box, aes(x = position, y = HR, text = sample_size)) + 
+  geom_boxplot() + 
+  coord_flip()
+
+ggplotly(g, tooltip = "text")
+```
+
+## 7.2: Variability
+
+```{r}
+nfl_df <- read_csv("data/standings.csv")
+nfl_sum <- nfl_df %>% group_by(team) %>%
+  summarise(nwins = sum(wins), nlosses = sum(loss)) %>% 
+  mutate(ngames = nwins + nlosses, win_percentage = 100 * nwins / ngames) %>% 
+  mutate(team = fct_reorder(team, win_percentage))
+
+ggplot(data = nfl_sum, aes(x = team, y = win_percentage)) +
+  geom_point() +
+  geom_segment(aes(x = team, xend = team, y = 0, yend = win_percentage)) +
+  coord_flip() +
+  labs(y = "Win Percentage")
+
+set.seed(231491)
+n <- 50
+beta0 <- 4
+beta1 <- -2
+x <- 1:n
+epsilon <- rnorm(n, 0, 75)
+y <- beta0 + beta1 * x + epsilon
+df <- tibble(x = x, y = y)
+ggplot(data = df, aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+sim_reg <- function(n = 50, beta0 = 4, beta1 = -2, s_eps = 75) {
+  x = 1:n
+  epsilon <- rnorm(n, 0, 75)
+
+  y <- beta0 + beta1 * x + epsilon
+  df <- tibble(x = x, y = y)
+  
+  mod <- lm(y ~ x, data = df) 
+  coefs <- mod$coefficients
+  return(coefs)
+}
+sim_reg()
+
+
+output <- purrr::rerun(1000, sim_reg())
+reg_df <- bind_rows(output) %>% rename(intercept = `(Intercept)`, slope = x)
+true_df <- tibble(intercept = 4, slope = -2)
+
+ggplot(data = reg_df) +
+  geom_abline(aes(intercept = intercept, slope = slope), alpha = 0.05) +
+  xlim(c(0, n + 1)) +
+  ylim(c(4 - 2 * 75 - 50, 4 - 2 * 0 + 50)) +
+  geom_abline(data = true_df, aes(intercept = intercept, slope = slope),
+              colour = "red") +
+  labs(x = "x",
+       y = "response")
+```
+
+## 7.3: Stat Survey
+
+```{r}
+statsurvey_df <- read_csv("data/stat113_survey.csv")
+
+ggplot(data = statsurvey_df, aes(x = time_both, fill = Tattoo)) + 
+  geom_bar()
+
+## 1. compute proportion and sample size for each year
+## 2. compute se for each year and adding/subtracting from proportion
+## 3. use a geom to plot se
+
+statsurvey_tattoo <- statsurvey_df %>% filter(!is.na(Tattoo)) %>%
+  group_by(time_both, Tattoo) %>%
+  summarise(ncount = n()) %>%
+  ungroup() %>%
+  group_by(time_both) %>%
+  mutate(ntotal = sum(ncount)) %>%
+  ungroup() %>%
+  filter(Tattoo == "Yes") %>%
+  mutate(prop = ncount / ntotal,
+         se = sqrt(prop * (1 - prop) / ntotal),
+         l_se = prop - se,
+         u_se = prop + se)
+
+statsurvey_tattoo <- statsurvey_tattoo %>% 
+  separate(time_both, into = c("semester", "year"), sep = 1) %>% 
+  arrange(year, desc(semester)) %>% 
+  unite(col = "time_both", c(semester, year)) %>% 
+  mutate(time_both = fct_inorder(time_both))
+
+ggplot(data = statsurvey_tattoo, aes(x = time_both, y = prop)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se))
+
+## determining whether mean GPA has increased over time
+
+stat_gpa <- statsurvey_df %>% filter(!is.na(GPA)) %>% 
+  mutate(time_both = fct_inorder(time_both)) %>% 
+  group_by(time_both) %>% 
+  summarise(meangpa = mean(GPA), sdgpa = sd(GPA), ngpa = n()) %>% 
+  mutate(l_se = meangpa - sdgpa / sqrt(ngpa),
+         u_se = meangpa + sdgpa / sqrt(ngpa))
+
+ggplot(stat_gpa, aes(x = time_both, y = meangpa)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se))
+```
