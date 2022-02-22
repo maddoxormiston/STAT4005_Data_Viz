@@ -1,0 +1,72 @@
+---
+title: "Quiz 5 Take Home"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own, and I have followed all rules for collaboration.” -Maddox Ormiston
+
+Worked with James Wolpe on the quiz
+
+## Question 1
+
+Construct a graph that uses the number of Facebook friends each student has.
+
+```{r, message = FALSE}
+library(tidyverse)
+statsurvey_df <- read_csv("data/stat113_survey.csv")
+
+statsurvey_fb1 <- statsurvey_df %>% 
+  filter(!is.na(Facebook)) %>% 
+  separate(time_both, into = c("semester", "year"), sep = 1) %>% 
+  arrange(year, desc(semester)) %>% 
+  unite(col = "time_both", c(semester, year)) %>% 
+  mutate(time_both = fct_inorder(time_both))
+
+stat_facebook <- statsurvey_fb1 %>% 
+  group_by(time_both) %>% 
+  summarise(meanfriend = mean(Facebook), sdfriend = sd(Facebook), nfriend = n()) %>% 
+  mutate(l_se = meanfriend - sdfriend / sqrt(nfriend),
+         u_se = meanfriend + sdfriend / sqrt(nfriend))
+
+ggplot(stat_facebook, aes(x = time_both, y = meanfriend)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se)) + 
+  labs(x = "Semester", y = "Average Number of Facebook Friends")
+```
+
+It looks like Facebook friends have decreased over time.
+
+## Question 2
+
+```{r}
+statsurvey_fb2 <- statsurvey_df %>% 
+  separate(time_both, into = c("semester", "year"), sep = 1) %>% 
+  arrange(year, desc(semester)) %>% 
+  unite(col = "time_both", c(semester, year)) %>% 
+  mutate(time_both = fct_inorder(time_both))
+
+statsurvey_fb2 <- statsurvey_fb1 %>% mutate(Facebook = replace(Facebook, Facebook == 0, NA)) %>% 
+  mutate(fb = if_else(is.na(Facebook), true = "No", false = "Yes")) %>% 
+  group_by(time_both, fb) %>% 
+  summarise(ncount = n()) %>%
+  ungroup() %>%
+  group_by(time_both) %>%
+  mutate(ntotal = sum(ncount)) %>%
+  ungroup() %>%
+  filter(fb == "Yes") %>% 
+  mutate(prop = ncount / ntotal)
+
+ggplot(data = statsurvey_fb2, aes(x = time_both, y = prop)) + 
+  geom_point() + 
+  labs(x = "Semester", y = "Proportion of Students Who Have Facebook")
+```
+
+This graph also shows that the proportion of students who have a Facebook acount has decreased over time.
