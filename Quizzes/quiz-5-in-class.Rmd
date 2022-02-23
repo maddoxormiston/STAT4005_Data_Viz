@@ -1,0 +1,52 @@
+---
+title: "Quiz 5 In Class"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+“All work presented is my own. I have not communicated with or worked with anyone else on this quiz.” -Maddox Ormiston
+
+## Question 1
+
+The first graph is appropriate because there is no variability in count. In the second graph, we can't see the variability that may be there - there could be outliers that increase an average even though there might not be that much variability in bill length among different species.
+
+## Question 2
+
+```{r, message = FALSE}
+library(here)
+library(tidyverse)
+hpi_df <- read_csv(here("data/hpi-tidy.csv"))
+
+hpi_bad <- hpi_df %>% group_by(Region) %>% 
+  summarise(avgexp = mean(LifeExpectancy)) %>% 
+  mutate(Region = fct_reorder(Region, avgexp))
+
+ggplot(data = hpi_bad, aes(x = Region, y = avgexp)) + 
+  geom_bar(stat = "identity") + 
+  labs(y = "Average Life Expectancy")
+```
+
+## Question 3
+
+```{r}
+hpi_good <- hpi_df %>% 
+  group_by(Region) %>% 
+  summarise(meanexp = mean(LifeExpectancy), sdexp = sd(LifeExpectancy), nexp = n()) %>% 
+  mutate(l_se = meanexp - sdexp / sqrt(nexp),
+         u_se = meanexp + sdexp / sqrt(nexp)) %>% 
+  mutate(Region = fct_reorder(Region, meanexp))
+
+ggplot(hpi_good, aes(x = Region, y = meanexp)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+From this, we can see that Sub Saharan Africa has an average much lower than the other regions, and that the variability in the Western World's life expectancy is not very large.
