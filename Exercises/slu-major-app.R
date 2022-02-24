@@ -1,0 +1,79 @@
+## Creating the SLU Majors app
+
+library(tidyverse)
+library(here)
+library(readxl)
+df <- read_excel(here("data/slu_graduates_17_21.xlsx"))
+
+## fixes error in the data
+df <- df %>% mutate(across(everything(),
+                           .fns = ~replace(., . ==  "STATS" , "STAT")))
+
+df_long <- df %>% pivot_longer(3:8, names_to = "type", values_to = "discipline")
+df_major <- df_long %>% 
+  filter(type == "major1" | type == "major2" | type == "major3")
+
+df_stat <- df_major %>% filter(discipline == "STAT") 
+df_statfull <- semi_join(df_long, df_stat, by = "adm_id") %>%
+  filter(type == "major1" |
+           type == "major2" | 
+           type == "major3")
+
+df_nostat <- df_statfull %>% filter(discipline != "STAT" & !is.na(discipline)) %>%
+  group_by(discipline) %>%
+  summarise(nstudent = n()) %>%
+  mutate(discipline = fct_reorder(discipline, nstudent))
+
+ggplot(data = df_nostat, aes(x = discipline, y = nstudent)) +
+  geom_col() +
+  coord_flip()
+
+var_choices <- c("STAT", "MATH", "CS")
+
+df_sex <- df_major %>% group_by(discipline, sex) %>% 
+  summarise(count = n()) %>% 
+  pivot_wider(names_from = "sex", values_from = "count") %>% 
+  filter(discipline == "STAT")
+
+library(shiny)
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(selectizeInput(inputId = "majorchoice", 
+                  label = "Choose a major", 
+                  choices = var_choices)), 
+    mainPanel(plotOutput(outputId = "majorplot"),
+              tableOutput(outputId = "table"))
+))
+
+server <- function(input, output, session) {
+  df_update <- reactive({
+    df_stat <- df_major %>% filter(discipline == input$majorchoice)
+  df_full <- semi_join(df_long, df_stat, by = "adm_id") %>%
+    filter(type == "major1" | type == "major2" | type == "major3")
+  
+  df_nomajor <- df_full %>% filter(discipline != input$majorchoice & !is.na(discipline)) %>%
+    group_by(discipline) %>%
+    summarise(nstudent = n()) %>%
+    mutate(discipline = fct_reorder(discipline, nstudent))
+  })
+  
+  df_sex <- reactive({
+    df_major %>% group_by(discipline, sex) %>% 
+      summarise(count = n()) %>% 
+      pivot_wider(names_from = "sex", values_from = "count") %>% 
+      filter(discipline == input$majorchoice)
+  })
+  
+  output$majorplot <- renderPlot(
+    ggplot(data = df_update(), aes(x = discipline, y = nstudent)) +
+      geom_col() +
+      coord_flip()
+  )
+  
+  output$table <- renderTable(
+    df_sex()
+  )
+}
+
+shinyApp(ui, server)
