@@ -1,0 +1,124 @@
+---
+title: "Mini Tutorial 1: Data Visualization"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The goal of this section is to describe techniques used to create good data visualizations. The tutorial will begin with an overview of grammar of graphics, then will describe two ways to create good visualizations using baselines and color scales.
+The data being used is from the MLB's 2016 season with the following variables:
+- `Name`
+- `Team`
+- `POS`: position
+- `Salary`
+- `Years`: the number of years the play was/has been with the team
+
+## Grammar of Graphics
+
+The following code chunk opens the library we will use and reads in our data set, along with some data manipulation to get the data into a workable format:
+
+```{r}
+library(tidyverse)
+library(here)
+mlb_df <- read_csv(here("data/mlb2016.csv"))
+
+mlb_df <- mlb_df %>% mutate(Salary = as.numeric(gsub("[\\$,]", "", Salary)), 
+                            POS = as.factor(POS)) %>% 
+  separate(col = Years, into = c("Years", "Range"), sep = " ") %>% 
+  mutate(Years = as.numeric(Years))
+```
+
+The ggplot2 package we use has seven different parameters that need to be specified in a graphic:
+- `data`: the data being used in the graphic
+- `mappings`: anything specified in the aes() argument
+- `geom_function`: the way the data is displayed
+- `stat`: the format in which the data appears
+- `position`: how the data is situated
+- `facet_function`: used to create subplots based on a categorical variable
+- `coordinate_function`: used to change the coordinate system
+
+A basic graphic of a quantitative variable frequency plot is shown below:
+
+```{r}
+ggplot(data = mlb_df, aes(x = Salary)) + geom_freqpoly()
+```
+
+In the above plot, `data` is specified as `mlb_df`, `mappings` is specified as an x value, and `geom_function` is specified as being geom_freqploy().
+
+A more complex graphic that will use more parameters is a bar plot for the count of each position:
+
+```{r}
+mlb_count <- mlb_df %>% group_by(POS) %>% 
+  summarize(nplayers = n()) %>% 
+  mutate(POS = fct_reorder(POS, nplayers))
+
+ggplot(mlb_count, aes(x = POS, y = nplayers)) + 
+  geom_bar(stat = "identity") + coord_flip()
+```
+
+In the above graphic, `stat` is specified as well because its default is "count", but that will return an error because the data is already in a format which will use the new variable, `nplayers`, as the y variable. Additionally, `coordinate_function` is specified in the coord_flip() argument, which flips the x and y coordinates.
+
+The following graphic shows another plot with the rest of the seven parameters specified:
+
+```{r}
+ggplot(data = mlb_df, aes(x = Years, y = Salary)) + 
+  geom_jitter(stat = "identity") + 
+  facet_wrap(~ Team)
+```
+
+Although this is a busy graphic, we can see that the data is `faceted`, or separated, by `Team` as specified in the facet_wrap() argument. Additionally, `position` is specified in the geom_jitter() argument, creating movement so overlapping points are easier to see.
+
+## Data Visualization: Baseline
+
+When creating good visualizations, one must keep in mind the message the graphic sends along with who will be interpreting it. Because people view bar plots as comparisons of length, a line plot or scatterplot can have a different scale because people can conceptualize the relative difference. Consider the graphic below that is showing the positions with the five highest salaries:
+
+```{r}
+mlb_pos <- mlb_df %>% group_by(POS) %>% 
+  summarise(meanSalary = mean(Salary)) %>% 
+  mutate(POS = fct_reorder(POS, meanSalary)) %>% 
+  arrange(desc(meanSalary)) %>% 
+  slice(1:5)
+
+ggplot(data = mlb_pos, aes(x = meanSalary, y = POS)) + 
+  geom_bar(stat = "identity") + 
+  coord_cartesian(xlim=c(5250000, NA))
+```
+
+This graphic makes it seem as though designated hitters have a mean salary twice as high as outfielders, and almost 13 times as high as pitchers. The graphic below shows a more appropriate version of this data that accurately portrays the mean salary for the top five positions:
+
+```{r}
+ggplot(data = mlb_pos, aes(x = meanSalary, y = POS)) + 
+  geom_bar(stat = "identity")
+```
+
+From this, we can see that designated hitters only have a salary about twice as high as pitchers, and the three positions in between are not that far apart.
+
+## Data Visualization: Color Scales
+
+When creating visualizations, it is important to understand what the viewer might automatically assume about your graphic based on the choices you make. One example is color scales. There are three typer of color scales to choose from: sequential, diverging, and unordered. Each scale is used with different types of data to get a point across. Sequential scales are used with data that has two ends of a spectrum, such as low to high altitude. Diverging scales are used when there is a neutral midpoint, such as an increase or decrease in Covid cases. An unordered color scale is used for categorical variables to represent different levels of the variable.
+
+Looking at the difference between years played and salary for each position, the below graphic shows this graph with a sequential scale, even though position is a categorical variable:
+
+```{r}
+ggplot(data = mlb_df, aes(x = Years, y = Salary, colour = POS)) + 
+  geom_point() + 
+  scale_colour_brewer("Set1")
+```
+
+Although not all positions are shown on this graphic because of the limit of the palette, the viewer might assume there is significance behind the choice of luminance variation. However, there is no significance to the choice of color for each position other than the alphabetical order they are read in. Below is an example of how this data can be displayed in a more accurate and less misleading way:
+
+```{r}
+library(viridis)
+ggplot(data = mlb_df, aes(x = Years, y = Salary)) + 
+  geom_point(aes(colour = POS))
+```
+
+Here we have an unordered color scale that does not create any confusion about how the different levels of the Position variable are related.
