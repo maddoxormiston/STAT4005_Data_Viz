@@ -1,0 +1,150 @@
+---
+title: "In Class Midterm"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+“All work presented is my own. I have not communicated with or worked with anyone else on this exam.” - Maddox Ormiston
+
+## Question 1
+
+* a: the grammar of graphics parameters that are specified are data, mappings, stat, geom_function, and coordinate function.
+* b: a graph that is not reordered has bad perception: viewers will have a difficult time making comparisons between type as the ends of the bar plot are difficult to compare when further apart from each other. Reordering this graph would make it easier for the viewer to understand the highest to lowest counts for each type
+* c: people view bar plots as comparisons of length, but a scatterplot can have a different scale because people can conceptualize the relative difference. When bar plots do not start at 0, it creates very misleading graphics where differences between levels of a categorical variable are misconstrued.
+
+## Question 2
+
+points awarded for pushing to GitHub
+
+## Question 3
+
+Something I learned from the O-ring example is the idea of excluding data when creating visualizations. Although there can be reasons for excluding observations, one must always state why the points were excluded, and also check what the visualization looks like with them to see if there is a substantial difference.
+
+## Question 4
+
+```{r}
+## a:
+library(maps)
+library(tidyverse)
+library(here)
+election_df <- read_csv(here("data/2020_county_pres.csv")) %>%
+  group_by(state_name) %>%
+  summarise(total_gop = sum(votes_gop),
+            total_dem = sum(votes_dem)) %>%
+  mutate(percent_gop = 100 * total_gop / (total_gop + total_dem)) %>%
+  mutate(state_name = str_to_lower(state_name)) %>% 
+  filter(state_name != "alaska" & state_name != "hawaii")
+state_df <- ggplot2::map_data("state")
+electionstate_df <- left_join(state_df, election_df, by = c("region" = "state_name"))
+electionstate_df <- electionstate_df %>% filter(region != "alaska" & region != "hawaii")
+
+ggplot(data = electionstate_df, aes(x = long, y = lat, group = group)) +
+  geom_polygon(colour = "black", aes(fill = percent_gop)) +
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) +
+  theme_void() +
+  scale_fill_viridis_c()
+```
+
+* b: the data set is much longer than 50 observations because R needs to know everywhere there is a direction change for the geom_polygon function in order to create the graph. Colorado and Wyoming are the only states that could be drawn using the least amount of longitude/latitude combinations, but even they would need four data points total.
+
+## Question 5
+
+```{r}
+library(shiny)
+library(tidyverse)
+library(ggrepel)
+library(here)
+alcohol_df <- read_csv(here("data/alcohol.csv"))
+
+ggplot(data = alcohol_df, aes(x = beer_servings)) + geom_histogram()
+
+serving_choices <- c("beer_servings", "spirit_servings", "wine_servings")
+
+ui <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("country", label = "Choose a country for the scatterplot", choices = alcohol_df$country), 
+      selectInput("servings", label = "Choose a variable for the histogram", choices = serving_choices)
+    ), 
+    mainPanel(plotOutput("scatterplot"), 
+              plotOutput("histogram"))
+  )
+)
+
+server <- function(input, output, session) {
+  onecountry_df <- reactive({
+    alcohol_df %>% filter(country == input$country)
+  })
+  
+  output$scatterplot <- renderPlot(
+    ggplot(data = alcohol_df, aes(x = beer_servings, y = wine_servings)) +
+  geom_point() +
+  geom_label_repel(data = onecountry_df(), aes(label = country)) +
+  geom_point(data = onecountry_df(), size = 3, shape = 1)
+  )
+  
+  output$histogram <- renderPlot(
+    ggplot(data = alcohol_df, aes(x = .data[[input$servings]])) + geom_histogram()
+  )
+}
+
+shinyApp(ui, server)
+```
+
+## Question 6
+
+completed on paper
+
+## Question 7
+
+```{r}
+library(tidyverse)
+library(here)
+wta_df <- read_csv(here("data/wta_matches_2019.csv"))
+wta_long <- wta_df %>% pivot_longer(c(winner_name, loser_name),
+                                    names_to = "won_or_lost",
+                                    values_to = "player") %>%
+  select(won_or_lost, player, w_ace, l_ace, everything())
+
+matches_df <- wta_long %>% group_by(player) %>% count() %>% filter(n >= 20)
+
+aceavg_df <- wta_long %>% mutate(aces = if_else(won_or_lost == "winner_name", true = w_ace, false = l_ace)) %>% select(aces, everything())
+
+ace_df <- aceavg_df %>% group_by(player) %>% summarise(meanace = mean(aces, na.rm = TRUE))
+
+lolli_df <- semi_join(ace_df, matches_df, by = c("player" = "player"))
+
+lolli_df <- lolli_df %>% mutate(player = fct_reorder(player, meanace)) %>% 
+  arrange(desc(meanace)) %>% 
+  slice(1:10)
+
+ggplot(data = lolli_df, aes(x = player, y = meanace)) +
+  geom_point() + 
+  geom_segment(aes(x = player, xend = player, y = 0, yend = meanace)) +
+  coord_flip() + 
+  labs(y = "Average Number of Aces")
+```
+
+## Question 8
+
+* a: One problem with this visualization is that it does not account for uncertainty or variability. Some players could have very few observations that are high and appear on this graph instead of other players who have high variability, and their average does not reflect this.
+* b: a plot that does show their variability is shown below:
+
+```{r}
+acevar_df <- wta_long %>% mutate(aces = if_else(won_or_lost == "winner_name", true = w_ace, false = l_ace)) %>% 
+  select(aces, everything()) %>% 
+  filter(player == lolli_df$player)
+
+ggplot(data = lolli_df, aes(x = meanace, y = player)) + 
+  geom_point(shape = 8, colour = "red") + 
+  geom_point(data = acevar_df, aes(x = aces), alpha = 0.4)
+```
+
+In this graph, we can see that all players have very different numbers of observations, meaning their average is not completely representative of their ability as a server.
