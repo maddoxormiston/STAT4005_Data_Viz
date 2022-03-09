@@ -1,0 +1,110 @@
+---
+title: "Mini Tutorial 1: Data Visualization"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Introduction
+
+Shiny is an R package used to create an interactive app to allow users to change what is being displayed on a graphic. The goal of this tutorial is to explain the different aspects of the Shiny app that are necessary to be specified to create an app. The data set used contains information about students who took Stat 113 and questions they answered during an intake quiz. The variables used are below:
+
+* `Year`, the class year of the student
+* `Hgt`
+* `Wgt`
+* `Haircut`
+* `GPA`
+* `Exercise`
+
+## Basic Shiny App
+
+```{r}
+library(tidyverse)
+library(here)
+library(shiny)
+stat_df <- read_csv(here("data/stat113.csv"))
+```
+
+The basic setup for the Shiny app includes a ui side and a server side. Everything specified on the ui side is what will be viewed by the user. In the code below, the items the user will see are a drop-down arrow with different stat options, called `stat`, a plot that shows the average stat value with error bars, called `errorplot`, and a table with the values used to create the plot, called `table`.
+
+```{r}
+stat_choices <- c("Hgt", "Wgt", "Haircut", "GPA", "Exercise")
+
+ui1 <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("stat", label = "Select a stat", choices = stat_choices)
+    ), 
+    mainPanel(plotOutput("errorplot"), 
+              tableOutput("table"))
+  )
+)
+```
+
+Next, the server defines what the outputs are through different render functions. Additionally, reactive statements are used when the user's input choice alters the data needed to be graphed. The reactive data set is later used in the outputs for both the error plot and the table. Both of the outputs specified in the ui side need to be defined in the server side in order for them to appear. Both `output$errorplot` and `output$table` create the outputs that are referenced in the ui side.
+
+```{r}
+server1 <- function(input, output, session) {
+  stat_error <- reactive({
+    ## creates a reactive data set that changes based on the user's input$stat
+    stat_df %>% filter(!is.na(.data[[input$stat]])) %>% 
+      group_by(Year) %>% 
+      summarise(meanstat = mean(.data[[input$stat]]), sdstat = sd(.data[[input$stat]]), nstat = n()) %>% 
+      mutate(l_se = meanstat - sdstat / sqrt(nstat),
+         u_se = meanstat + sdstat / sqrt(nstat))
+  })
+  
+  output$errorplot <- renderPlot(
+    ggplot(stat_error(), aes(x = Year, y = meanstat)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se))
+  )
+  
+  output$table <- renderTable(
+    stat_error()
+  )
+    
+}
+
+shinyApp(ui1, server1)
+```
+
+This app allows the user to select a stat to be viewed as an average with error bars across all class years. Below is an example of a more complicated app that has more inputs:
+
+```{r}
+stat_choices <- c("Hgt", "Wgt", "Haircut", "GPA", "Exercise")
+year_choices <- c("FirstYear", "Sophomore", "Junior", "Senior")
+
+ui2 <- fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      radioButtons("year", label = "Choose a class year", choices = year_choices),
+      selectInput("stat1", label = "Select a stat for the x-axis", choices = stat_choices),
+      selectInput("stat2", label = "Select a stat for the y-axis", choices = stat_choices, selected = "Wgt")
+    ), 
+    mainPanel(plotOutput("scatterplot"))
+  )
+)
+
+server2 <- function(input, output, session) {
+  stat_year <- reactive({
+    ## creates a reactive data set that changes based on the user's input$year
+    stat_df %>% filter(Year == input$year)
+  })
+  
+  output$scatterplot <- renderPlot(
+    ggplot(stat_year(), aes(x = .data[[input$stat1]], y = .data[[input$stat2]])) +
+  geom_point()
+  )
+}
+
+shinyApp(ui2, server2)
+```
+
+In this version, the user has three different ways to interact: choosing the class year, the x-axis variable, and the y-axis variable. Those choices are all specified in the ui side as different choices, and are referenced in the server side. The year input choice is used to filter and create the reactive data set, and the two stat variables are used as the x- and y-axis arguments. Shiny provides an opportunity for user to interact with the data to make comparisons.
