@@ -1,0 +1,72 @@
+---
+title: "Mini Tutorial 3: Expressing Uncertainty"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Introduction
+
+When creating visualizations, it is important to show as much about the data as possible without overwhelming the viewer. Although simple graphs are sometimes good, they can eliminate the variability that appears in the data and possibly make a misconstrued graphic that is not telling the whole picture. For this tutorial, we will revisit a previously used data set that contains information about the MLB's 2016 season with the following variables:
+
+* `Name`
+* `Team`
+* `POS`, position
+* `Salary`
+* `Years`, the number of years the play was/has been with the team
+
+We will use these variables to show that some plots are bad at showing variability, while others are not.
+
+## Variability and Uncertainty
+
+In the code below, we are creating a graph that shows the average salary among the different positions:
+
+```{r}
+library(tidyverse)
+library(here)
+mlb_df <- read_csv(here("data/mlb2016.csv"))
+
+mlb_df <- mlb_df %>% mutate(Salary = as.numeric(gsub("[\\$,]", "", Salary)), 
+                            POS = as.factor(POS)) %>% 
+  separate(col = Years, into = c("Years", "Range"), sep = " ") %>% 
+  mutate(Years = as.numeric(Years))
+
+mlb_pos <- mlb_df %>% group_by(POS) %>% 
+  summarise(meanSalary = mean(Salary)) %>% 
+  mutate(POS = fct_reorder(POS, meanSalary))
+
+ggplot(data = mlb_pos, aes(x = meanSalary, y = POS)) + 
+  geom_bar(stat = "identity")
+```
+
+In this graph, it appears that designated hitters make much more than other positions. However, we see below that this is not the entire picture, where the mean is displayed in red, and each individual player's salary is a black point:
+
+```{r}
+ggplot(data = mlb_pos, aes(x = meanSalary, y = POS)) + 
+  geom_point(shape = 8, colour = "red") + 
+  geom_point(data = mlb_df, aes(x = Salary), alpha = 0.4)
+```
+
+From this, we see that the range of salaries for different positions is very wide, and that the position with the highest mean has very few observations, making the higher salaries increase the average.
+
+Another way to express variability and uncertainty in graphs is through error bars. The example below shows how error bars might also improve the first misleading bar chart.
+
+```{r}
+mlb_error <- mlb_df %>% group_by(POS) %>%
+  summarise(meanSalary = mean(Salary), sdSalary = sd(Salary), nSalary = n()) %>%
+  mutate(l_se = meanSalary - sdSalary / sqrt(nSalary),
+         u_se = meanSalary + sdSalary / sqrt(nSalary))
+
+ggplot(mlb_error, aes(x = POS, y = meanSalary)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = l_se, ymax = u_se)) + 
+  coord_flip()
+```
+
+In this graph, we can see that although designated hitters still have the highest mean salary, the standard error is very high, meaning there is a lot of variability in the position's salary, or that the number of observations is very low. In conclusion, being able to express variability and uncertainty in graphs is very important as visualizations can tell one story when the data is telling another, and it is your duty to ensure the graphic is not deceiving.

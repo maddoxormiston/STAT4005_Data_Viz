@@ -8,18 +8,19 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
 ## Introduction
 
 The goal of this section is to describe techniques used to create good data visualizations. The tutorial will begin with an overview of grammar of graphics, then will describe two ways to create good visualizations using baselines and color scales.
 The data being used is from the MLB's 2016 season with the following variables:
-- `Name`
-- `Team`
-- `POS`: position
-- `Salary`
-- `Years`: the number of years the play was/has been with the team
+
+* `Name`
+* `Team`
+* `POS`, position
+* `Salary`
+* `Years`, the number of years the play was/has been with the team
 
 ## Grammar of Graphics
 
@@ -37,13 +38,14 @@ mlb_df <- mlb_df %>% mutate(Salary = as.numeric(gsub("[\\$,]", "", Salary)),
 ```
 
 The ggplot2 package we use has seven different parameters that need to be specified in a graphic:
-- `data`: the data being used in the graphic
-- `mappings`: anything specified in the aes() argument
-- `geom_function`: the way the data is displayed
-- `stat`: the format in which the data appears
-- `position`: how the data is situated
-- `facet_function`: used to create subplots based on a categorical variable
-- `coordinate_function`: used to change the coordinate system
+
+* `data`, the data being used in the graphic
+* `mappings`, anything specified in the aes() argument
+* `geom_function`, the way the data is displayed
+* `stat`, the format in which the data appears
+* `position`, how the data is situated
+* `facet_function`, used to create subplots based on a categorical variable
+* `coordinate_function`, used to change the coordinate system
 
 A basic graphic of a quantitative variable frequency plot is shown below:
 
