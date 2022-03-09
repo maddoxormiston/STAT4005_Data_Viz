@@ -1,0 +1,75 @@
+---
+title: "Mini Tutorial 2: Mapping"
+author: Maddox Ormiston
+output: 
+  rmdformats::readthedown:
+    code_folding: show
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Introduction
+
+The goal of this tutorial is to show how mapping can be used to display variables spatially to provide tools for comparison. The data used contains the population for each county in Idaho as of the beginning of 2022. At the completion, we want to compare county's populations with others in the state.
+
+## Mapping
+
+The code below shows the reading in of the libraries necessary:
+
+```{r}
+library(maps)
+library(tidyverse)
+library(readr)
+library(usdata)
+library(here)
+```
+
+From the maps package, we have access to the spatial data needed to map counties for all US states. I chose to use Idaho as I have lived there, but any state can be selected using the subregion variable. Using the population data found on the World Population Review website, an overall data set with the spatial data and population data is created to map.
+
+```{r}
+county_df <- ggplot2::map_data("county")
+idahocounty_df <- county_df %>% filter(region == "idaho")
+ggplot(data = idahocounty_df, aes(x = long, y = lat)) + 
+  geom_polygon(fill = "white", colour = "black", aes(group = group)) + 
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) + 
+  theme_void()
+
+idahocounty_df$subregion <- paste0(idahocounty_df$subregion, " County")
+
+idahocounty_df$subregion <- str_to_title(idahocounty_df$subregion)
+
+pop_df <- read_csv(here("data/csvData.csv"))
+
+countypop_df <- left_join(idahocounty_df, pop_df, by = c("subregion" = "CTYNAME"))
+```
+
+Using the longitude and latitude  variables that are provided in the maps package and grouping by the county, geom_polygon() is used to create the projection of the state:
+
+```{r}
+ggplot(data = countypop_df, aes(x = long, y = lat)) + 
+  geom_polygon(colour = "black", fill = "white", aes(group = group)) + 
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) + 
+  theme_void()
+```
+
+To add the component of population comparison, the fill argument in the geom_polygon() mapping creates a map with the values of the population variable dictating the fill color of the county.
+
+```{r}
+ggplot(data = countypop_df, aes(x = long, y = lat)) + 
+  geom_polygon(colour = "black", aes(group = group, fill = pop2022)) + 
+  coord_map(projection = "albers", lat0 = 39, lat1 = 45) + 
+  theme_void()
+```
+
+It is important to note the map projection is important, as the aspect ratio can be extremely skewed without a specified coordinate system. Below is a map with the default projection:
+
+```{r}
+ggplot(data = countypop_df, aes(x = long, y = lat)) + 
+  geom_polygon(colour = "black", aes(group = group, fill = pop2022)) + 
+  theme_void()
+```
+
+From this map, we can see that Ada County, where the state's capital is located, has the highest population by much more than the other counties, however Caldwell County and Kootenai County are the next two highest.
