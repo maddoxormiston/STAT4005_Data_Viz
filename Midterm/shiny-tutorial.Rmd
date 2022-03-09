@@ -1,5 +1,5 @@
 ---
-title: "Mini Tutorial 1: Data Visualization"
+title: "Mini Tutorial 4: Shiny"
 author: Maddox Ormiston
 output: 
   rmdformats::readthedown:
@@ -10,6 +10,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
+
+“All work presented is my own. I have not communicated with or worked with anyone else on this exam.” -Maddox Ormiston
 
 ## Introduction
 

@@ -11,6 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
+“All work presented is my own. I have not communicated with or worked with anyone else on this exam.” -Maddox Ormiston
+
 ## Introduction
 
 The goal of this tutorial is to show how mapping can be used to display variables spatially to provide tools for comparison. The data used contains the population for each county in Idaho as of the beginning of 2022. At the completion, we want to compare county's populations with others in the state.

@@ -11,6 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
+“All work presented is my own. I have not communicated with or worked with anyone else on this exam.” -Maddox Ormiston
+
 ## Introduction
 
 When creating visualizations, it is important to show as much about the data as possible without overwhelming the viewer. Although simple graphs are sometimes good, they can eliminate the variability that appears in the data and possibly make a misconstrued graphic that is not telling the whole picture. For this tutorial, we will revisit a previously used data set that contains information about the MLB's 2016 season with the following variables:
